@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Belajar Ceria - Kelas 4 SD</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -31,7 +30,7 @@
                 <h2 class="text-xl font-bold text-gray-700">Pengaturan Gemini API Key ⚙️</h2>
                 <button onclick="hideApiSetup()" class="text-gray-400 hover:text-gray-600 font-bold text-sm">✕ Tutup</button>
             </div>
-            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal baru otomatis dari internet.</p>
+            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal otomatis dari AI. (Bisa dikosongkan untuk main mode offline/gratisan).</p>
             <div class="flex gap-2 mb-2">
                 <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-500 text-sm">
                 <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
@@ -42,7 +41,7 @@
         <!-- Layar Menu Utama -->
         <div id="home-screen" class="text-center">
             <div class="flex justify-between items-center mb-4">
-                <span id="api-status-badge" class="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-600">Checking API...</span>
+                <span id="api-status-badge" class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300">● Mode Offline (Default)</span>
                 <button onclick="showApiSetup()" class="text-xs text-green-600 hover:underline font-bold">⚙️ Pengaturan API Key</button>
             </div>
 
@@ -188,36 +187,54 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let currentSubject = "";
-        let apiKey = localStorage.getItem('gemini_api_key') || "";
+        let apiKey = "";
 
-        // Inisialisasi Tampilan
-        const subjectContainer = document.getElementById('subject-buttons');
-        subjectsData.forEach(sub => {
-            const btn = document.createElement('button');
-            btn.className = "bg-green-50 hover:bg-green-100 text-green-900 font-bold py-3 px-3 rounded-2xl border-2 border-green-200 transition transform hover:-translate-y-1 hover:shadow-md flex flex-col items-center justify-center gap-1";
-            btn.innerHTML = `<span class="text-2xl">${sub.icon}</span><span class="text-xs sm:text-sm text-center leading-tight">${sub.name}</span>`;
-            btn.onclick = () => startSubject(sub.name);
-            subjectContainer.appendChild(btn);
+        // Dapatkan API Key secara aman dari LocalStorage
+        try {
+            apiKey = localStorage.getItem('gemini_api_key') || "";
+        } catch(e) {
+            console.warn("Storage ditolak oleh browser:", e);
+        }
+
+        // Jalankan render secara aman saat DOM siap
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSubjectButtons();
+            updateApiBadge();
         });
 
-        updateApiBadge();
+        function renderSubjectButtons() {
+            const subjectContainer = document.getElementById('subject-buttons');
+            if(!subjectContainer) return;
+            subjectContainer.innerHTML = '';
+
+            subjectsData.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = "bg-green-50 hover:bg-green-100 text-green-900 font-bold py-3 px-3 rounded-2xl border-2 border-green-200 transition transform hover:-translate-y-1 hover:shadow-md flex flex-col items-center justify-center gap-1";
+                btn.innerHTML = `<span class="text-2xl">${sub.icon}</span><span class="text-xs sm:text-sm text-center leading-tight">${sub.name}</span>`;
+                btn.onclick = () => startSubject(sub.name);
+                subjectContainer.appendChild(btn);
+            });
+        }
 
         function updateApiBadge() {
             const badge = document.getElementById('api-status-badge');
+            if(!badge) return;
             if(apiKey) {
                 badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-300";
                 badge.innerText = "● API Online Active";
             } else {
                 badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300";
-                badge.innerText = "● Offline Mode (Default)";
+                badge.innerText = "● Mode Offline (Default)";
             }
         }
 
         function showScreen(id) {
             ['home-screen', 'loading-screen', 'quiz-screen', 'result-screen'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
+                const el = document.getElementById(s);
+                if(el) el.classList.add('hidden');
             });
-            document.getElementById(id).classList.remove('hidden');
+            const target = document.getElementById(id);
+            if(target) target.classList.remove('hidden');
         }
 
         function showApiSetup() {
@@ -232,10 +249,12 @@
         function saveApiKey() {
             const inputVal = document.getElementById('api-key-input').value.trim();
             apiKey = inputVal;
-            localStorage.setItem('gemini_api_key', inputVal);
+            try {
+                localStorage.setItem('gemini_api_key', inputVal);
+            } catch(e) {}
             updateApiBadge();
             hideApiSetup();
-            alert(inputVal ? "API Key berhasil disimpan!" : "API Key dihapus. Menggunakan mode soal offline.");
+            alert(inputVal ? "API Key disimpan! Kuis akan dibuat otomatis dari AI." : "API Key dikosongkan. Menggunakan Mode Offline.");
         }
 
         async function startSubject(subject) {
@@ -260,10 +279,9 @@ Format JSON berupa Array dari 5 Object seperti ini:
   }
 ]`;
 
-            // Gunakan model gemini-2.5-flash sebagai standar utama
             const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
             let success = false;
-            let errors = [];
+            let lastErr = "";
 
             for (let model of modelsToTry) {
                 try {
@@ -283,7 +301,7 @@ Format JSON berupa Array dari 5 Object seperti ini:
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(data.error?.message || `HTTP status ${response.status}`);
+                        throw new Error(data.error?.message || `HTTP ${response.status}`);
                     }
 
                     let jsonText = data.candidates[0].content.parts[0].text;
@@ -296,7 +314,7 @@ Format JSON berupa Array dari 5 Object seperti ini:
                         break;
                     }
                 } catch (err) {
-                    errors.push(`${model}: ${err.message}`);
+                    lastErr = err.message;
                 }
             }
 
@@ -305,7 +323,7 @@ Format JSON berupa Array dari 5 Object seperti ini:
                 score = 0;
                 showQuestion();
             } else {
-                alert(`Gagal mengambil soal dari AI.\n\nDetail Error: ${errors[0]}\n\nCatatan: Pastikan API Key diambil dari https://aistudio.google.com/\n\nAplikasi dialihkan ke Mode Offline.`);
+                alert(`AI Online sedang sibuk/salah API Key (${lastErr}).\n\nAplikasi otomatis menggunakan Bank Soal Offline agar anak tetap bisa belajar!`);
                 useFallbackQuestions(subject);
             }
         }
@@ -345,4 +363,52 @@ Format JSON berupa Array dari 5 Object seperti ini:
 
         function checkAnswer(selected, correct, btn) {
             const buttons = document.getElementById('options-container').querySelectorAll('button');
-            buttons.forEach(
+            buttons.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btn.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800 bounce";
+                score += 20;
+            } else {
+                btn.className = "w-full text-left bg-red-100 border-2 border-red-500 font-bold p-4 rounded-xl text-red-800";
+                buttons.forEach(b => {
+                    if (b.innerText === correct) {
+                        b.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800";
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < 5) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1400);
+        }
+
+        function showResult() {
+            showScreen('result-screen');
+            document.getElementById('final-score').innerText = score;
+
+            const icon = document.getElementById('result-icon');
+            const title = document.getElementById('result-title');
+
+            if(score >= 80) {
+                icon.innerText = "🏆";
+                title.innerText = "Hebat Sekali! 🎉";
+            } else if(score >= 60) {
+                icon.innerText = "🌟";
+                title.innerText = "Bagus Sekali!";
+            } else {
+                icon.innerText = "💪";
+                title.innerText = "Ayo Belajar Lagi!";
+            }
+        }
+
+        function showHome() {
+            showScreen('home-screen');
+        }
+    </script>
+</body>
+</html>
