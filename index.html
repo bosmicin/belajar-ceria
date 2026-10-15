@@ -229,7 +229,9 @@ async function askGemini(model, prompt, signal) {
   catch (_) { throw new Error('Balasan dari layanan AI tidak dapat dibaca.'); }
   if (!response.ok) {
     const message = data && data.error && data.error.message ? data.error.message : `HTTP ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
   const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('');
   if (!text) {
@@ -263,30 +265,51 @@ Ketentuan:
 [{"pertanyaan":"Teks pertanyaan?","pilihan":["A","B","C","D"],"jawaban_benar":"A"}]`;
 
   let lastError = 'Tidak diketahui';
-  // Model stabil terbaru, dengan model stabil generasi sebelumnya sebagai cadangan.
-  const models = ['gemini-3.8-flash', 'gemini-3.6-flash'];
+  // Model stabil resmi, dari model utama ke alternatif.
+  const models = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
+
   for (const model of models) {
-    if (thisToken !== loadingToken) return;
-    try {
-      const questions = await askGemini(model, prompt, requestController.signal);
+    // Jika server sibuk, lakukan satu percobaan ulang dengan jeda.
+    for (let attempt = 0; attempt < 2; attempt++) {
       if (thisToken !== loadingToken) return;
-      currentQuestions = questions;
-      currentQuestionIndex = 0;
-      score = 0;
-      requestController = null;
-      showQuestion();
-      return;
-    } catch (error) {
-      if (error.name === 'AbortError' || thisToken !== loadingToken) return;
-      lastError = error.message || String(error);
-      // Don't retry another model when the key, quota, or request is invalid.
-      if (/API key not valid|invalid api key|permission|quota|billing|403|401|key expired/i.test(lastError)) break;
+      try {
+        const questions = await askGemini(model, prompt, requestController.signal);
+        if (thisToken !== loadingToken) return;
+        currentQuestions = questions;
+        currentQuestionIndex = 0;
+        score = 0;
+        requestController = null;
+        showQuestion();
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError' || thisToken !== loadingToken) return;
+        lastError = error.message || String(error);
+
+        // Kunci tidak valid atau kuota habis perlu diperbaiki di pengaturan akun.
+        if (/API key not valid|invalid api key|permission|quota|billing|403|401|key expired|RESOURCE_EXHAUSTED/i.test(lastError)) {
+          requestController = null;
+          showHome();
+          alert('Permintaan AI ditolak atau kuota tercapai.\n\nDetail: ' + lastError + '\n\nPeriksa API Key dan batas penggunaan di Google AI Studio.');
+          return;
+        }
+
+        const temporaryProblem = error.status === 503 || error.status === 429 ||
+          /high demand|overload|temporar|try again later|unavailable|503|429|fetch failed|networkerror/i.test(lastError);
+
+        if (temporaryProblem && attempt === 0) {
+          $('loading-screen').querySelector('p').textContent = 'Server AI sedang sibuk. Mencoba kembali sebentar lagi...';
+          await new Promise(resolve => window.setTimeout(resolve, 1800));
+          if (thisToken !== loadingToken) return;
+          continue;
+        }
+        break;
+      }
     }
   }
 
   requestController = null;
   showHome();
-  alert('Gagal mengambil soal dari AI.\n\nDetail: ' + lastError + '\n\nPeriksa API Key, kuota penggunaan, dan koneksi internet. Jika muncul pesan bahwa model tidak tersedia, periksa daftar model resmi Gemini API.');
+  alert('AI belum bisa membuat soal setelah beberapa percobaan.\n\nDetail: ' + lastError + '\n\nJika tertulis high demand/server sibuk, coba lagi beberapa menit kemudian. Jika tertulis quota, periksa batas penggunaan API Key di Google AI Studio.');
 }
 
 function showQuestion() {
