@@ -15,7 +15,6 @@
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center">
 
-    <!-- Container Utama -->
     <div class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-6 my-6 border-4 border-green-200">
         
         <!-- Layar Setup API Key -->
@@ -24,7 +23,7 @@
                 <h2 class="text-xl font-bold text-gray-700">Pengaturan Gemini API Key ⚙️</h2>
                 <button onclick="hideApiSetup()" class="text-gray-400 hover:text-gray-600 font-bold text-sm">✕ Tutup</button>
             </div>
-            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal otomatis dari AI. (Bisa dikosongkan untuk main mode offline/gratisan).</p>
+            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal otomatis dari AI.</p>
             <div class="flex gap-2 mb-2">
                 <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none text-sm">
                 <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
@@ -48,7 +47,7 @@
         <div id="loading-screen" class="hidden text-center py-12">
             <div class="text-7xl mb-4 animate-bounce">🚀</div>
             <h2 class="text-2xl font-bold text-green-600 mb-2">Tunggu Sebentar...</h2>
-            <p class="text-gray-500 text-sm">Robot AI sedang meracik 5 soal baru yang seru untukmu!</p>
+            <p class="text-gray-500 text-sm" id="loading-text">Robot AI sedang meracik 5 soal baru yang seru untukmu!</p>
         </div>
 
         <!-- Layar Kuis -->
@@ -177,9 +176,7 @@
         let currentSubject = "";
         let apiKey = "";
 
-        try {
-            apiKey = localStorage.getItem('gemini_api_key') || "";
-        } catch(e) {}
+        try { apiKey = localStorage.getItem('gemini_api_key') || ""; } catch(e) {}
 
         function renderSubjectButtons() {
             const container = document.getElementById('subject-buttons');
@@ -220,9 +217,7 @@
             document.getElementById('api-key-input').value = apiKey;
         }
 
-        function hideApiSetup() {
-            document.getElementById('api-setup-screen').classList.add('hidden');
-        }
+        function hideApiSetup() { document.getElementById('api-setup-screen').classList.add('hidden'); }
 
         function saveApiKey() {
             const inputVal = document.getElementById('api-key-input').value.trim();
@@ -254,36 +249,45 @@ Kembalikan HANYA format JSON murni tanpa markdown:
   }
 ]`;
 
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { response_mime_type: "application/json" }
-                    })
-                });
+            // Daftar model yang dicoba bergantian jika ada yang sibuk
+            const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+            let success = false;
 
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error?.message || `HTTP ${response.status}`);
+            for (let model of candidateModels) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { response_mime_type: "application/json" }
+                        })
+                    });
 
-                let jsonText = data.candidates[0].content.parts[0].text;
-                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    if (!response.ok) continue;
 
-                const parsed = JSON.parse(jsonText);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    currentQuestions = parsed.slice(0, 5);
-                    currentQuestionIndex = 0;
-                    score = 0;
-                    showQuestion();
-                    return;
+                    const data = await response.json();
+                    let jsonText = data.candidates[0].content.parts[0].text;
+                    jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                    const parsed = JSON.parse(jsonText);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        currentQuestions = parsed.slice(0, 5);
+                        currentQuestionIndex = 0;
+                        score = 0;
+                        showQuestion();
+                        success = true;
+                        break;
+                    }
+                } catch (err) {
+                    // Coba model berikutnya
                 }
-            } catch (err) {
-                alert(`Catatan AI (${err.message}). Menggunakan Soal Offline.`);
             }
 
-            useFallbackQuestions(subject);
+            if (!success) {
+                useFallbackQuestions(subject);
+            }
         }
 
         function useFallbackQuestions(subject) {
