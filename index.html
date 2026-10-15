@@ -23,7 +23,7 @@
                 <h2 class="text-xl font-bold text-gray-700">Pengaturan Gemini API Key ⚙️</h2>
                 <button onclick="hideApiSetup()" class="text-gray-400 hover:text-gray-600 font-bold text-sm">✕ Tutup</button>
             </div>
-            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio agar aplikasi bisa meracik soal baru dari internet.</p>
+            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk meracik soal dari internet.</p>
             <div class="flex gap-2 mb-2">
                 <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none text-sm">
                 <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
@@ -155,6 +155,24 @@
             alert(inputVal ? "API Key disimpan!" : "API Key dikosongkan.");
         }
 
+        async function fetchWithRetry(url, options, retries = 2) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (res.ok) return res;
+                    if (res.status === 429 || res.status >= 500) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        continue;
+                    }
+                    return res;
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+            return fetch(url, options);
+        }
+
         async function startSubject(subject) {
             currentSubject = subject;
             document.getElementById('subject-title').innerText = subject;
@@ -182,50 +200,40 @@ SANGAT PENTING:
   }
 ]`;
 
-            const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-            let success = false;
-            let lastError = "";
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { 
+                            response_mime_type: "application/json",
+                            temperature: 0.9
+                        }
+                    })
+                });
 
-            for (let model of candidateModels) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { 
-                                response_mime_type: "application/json",
-                                temperature: 0.9
-                            }
-                        })
-                    });
+                const data = await response.json();
 
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.error?.message || `HTTP ${response.status}`);
-                    }
-
-                    let jsonText = data.candidates[0].content.parts[0].text;
-                    jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-                    const parsed = JSON.parse(jsonText);
-                    if (Array.isArray(parsed) && parsed.length >= 5) {
-                        currentQuestions = parsed.slice(0, 5);
-                        currentQuestionIndex = 0;
-                        score = 0;
-                        showQuestion();
-                        success = true;
-                        break;
-                    }
-                } catch (err) {
-                    lastError = err.message;
+                if (!response.ok) {
+                    throw new Error(data.error?.message || `HTTP ${response.status}`);
                 }
-            }
 
-            if (!success) {
-                alert(`Gagal mengambil soal baru dari AI!\n\nAlasan: ${lastError}\n\nPastikan API Key sudah benar dan koneksi internet lancar.`);
+                let jsonText = data.candidates[0].content.parts[0].text;
+                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                const parsed = JSON.parse(jsonText);
+                if (Array.isArray(parsed) && parsed.length >= 5) {
+                    currentQuestions = parsed.slice(0, 5);
+                    currentQuestionIndex = 0;
+                    score = 0;
+                    showQuestion();
+                } else {
+                    throw new Error("Format respon AI tidak valid.");
+                }
+            } catch (err) {
+                alert(`Gagal mengambil soal baru dari AI!\n\nAlasan: ${err.message}\n\nSilakan coba klik mata pelajaran lagi setelah beberapa detik.`);
                 showHome();
             }
         }
