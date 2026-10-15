@@ -1,302 +1,362 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Belajar Ceria - Kelas 4 SD</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #f0fdf4; font-family: 'Nunito', sans-serif; }
-        .hidden { display: none !important; }
-        .bounce { animation: bounce 0.5s; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#16a34a">
+  <title>Belajar Ceria - Kelas 4 SD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body{background:#f0fdf4;font-family:'Nunito',sans-serif}
+    .hidden{display:none!important}
+    .bounce{animation:bounce .45s}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    button:focus-visible,input:focus-visible{outline:3px solid #86efac;outline-offset:2px}
+    .option-btn{transition:all .15s ease}
+  </style>
 </head>
-<body class="min-h-screen p-4 flex flex-col items-center justify-center">
+<body class="min-h-screen p-3 sm:p-5 flex flex-col items-center justify-center">
+  <main class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-4 sm:p-6 my-4 border-4 border-green-200">
+    <section id="api-setup-screen" class="pb-5 border-b-2 border-green-100 mb-5 hidden">
+      <div class="flex justify-between items-center gap-3 mb-2">
+        <h2 class="text-lg sm:text-xl font-extrabold text-gray-700">Pengaturan Gemini API Key ⚙️</h2>
+        <button type="button" onclick="hideApiSetup()" class="text-gray-500 hover:text-gray-800 font-bold text-sm">✕ Tutup</button>
+      </div>
+      <p class="text-sm text-gray-600 mb-3">Masukkan API Key dari Google AI Studio agar aplikasi dapat membuat soal baru.</p>
+      <div class="flex flex-col sm:flex-row gap-2 mb-2">
+        <input type="password" id="api-key-input" autocomplete="off" placeholder="Tempel Gemini API Key di sini..." class="min-w-0 flex-1 p-3 border-2 border-green-300 rounded-xl text-sm">
+        <button type="button" onclick="saveApiKey()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-xl text-sm">Simpan</button>
+      </div>
+      <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3">Penting: API Key yang disimpan di browser tidak aman untuk aplikasi publik. Jangan gunakan kunci yang memiliki akses atau batas biaya penting. Atur pembatasan API dan kuota di Google AI Studio/Google Cloud.</p>
+      <p class="text-xs text-gray-500 mt-3">Buat atau periksa API Key di <a class="text-blue-700 underline" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+    </section>
 
-    <div class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-6 my-6 border-4 border-green-200">
-        
-        <!-- Layar Setup API Key -->
-        <div id="api-setup-screen" class="pb-6 border-b-2 border-green-100 mb-6 hidden">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xl font-bold text-gray-700">Pengaturan Gemini API Key ⚙️</h2>
-                <button onclick="hideApiSetup()" class="text-gray-400 hover:text-gray-600 font-bold text-sm">✕ Tutup</button>
-            </div>
-            <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk meracik soal dari internet.</p>
-            <div class="flex gap-2 mb-2">
-                <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none text-sm">
-                <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
-            </div>
-        </div>
+    <section id="home-screen">
+      <div class="flex justify-between items-center gap-2 mb-4">
+        <span id="api-status-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">● API Key Belum Diisi</span>
+        <button type="button" onclick="showApiSetup()" class="text-xs text-green-700 hover:underline font-extrabold">⚙️ Pengaturan API Key</button>
+      </div>
+      <div class="text-center">
+        <div class="text-5xl mb-2">🌟📚</div>
+        <h1 class="text-3xl sm:text-4xl font-black text-green-700 mb-2">Belajar Ceria!</h1>
+        <p class="text-gray-600 mb-5 font-semibold">Kuis belajar untuk anak kelas 4 SD</p>
+      </div>
+      <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3 mb-5 text-sm text-blue-900">
+        Pilih mata pelajaran. AI akan mencoba membuat 5 soal pilihan ganda baru untuk setiap sesi. Koneksi internet dan API Key diperlukan.
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="subject-buttons"></div>
+      <p class="text-xs text-gray-500 text-center mt-5">Belajar sedikit demi sedikit setiap hari. Semangat! 💚</p>
+    </section>
 
-        <!-- Layar Menu Utama -->
-        <div id="home-screen" class="text-center">
-            <div class="flex justify-between items-center mb-4">
-                <span id="api-status-badge" class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300">● API Key Belum Diisi</span>
-                <button onclick="showApiSetup()" class="text-xs text-green-600 hover:underline font-bold">⚙️ Pengaturan API Key</button>
-            </div>
+    <section id="loading-screen" class="hidden text-center py-12">
+      <div class="text-6xl mb-4">🚀</div>
+      <h2 class="text-2xl font-black text-green-700 mb-2">Tunggu Sebentar...</h2>
+      <p class="text-gray-600 text-sm mb-4">AI sedang menyiapkan 5 soal untukmu.</p>
+      <div class="w-full max-w-xs mx-auto bg-gray-200 rounded-full h-2 overflow-hidden"><div class="h-full bg-green-500 animate-pulse w-2/3 rounded-full"></div></div>
+      <button type="button" onclick="cancelLoading()" class="mt-6 text-sm text-gray-600 underline">Batal / Kembali</button>
+    </section>
 
-            <h1 class="text-4xl font-extrabold text-green-600 mb-2">Belajar Ceria! 🌟</h1>
-            <p class="text-gray-500 mb-6 font-medium">Pilih mata pelajaran kuis Kelas 4 SD di bawah ini:</p>
-            
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="subject-buttons"></div>
-        </div>
+    <section id="quiz-screen" class="hidden">
+      <div class="flex justify-between items-center gap-2 mb-4">
+        <span id="subject-title" class="font-extrabold text-green-800 bg-green-100 px-3 py-2 rounded-full text-sm">Matematika</span>
+        <span class="font-extrabold text-blue-700 text-sm">Soal <span id="current-q-num">1</span>/5</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
+        <div id="progress-bar" class="bg-green-500 h-full rounded-full transition-all duration-300" style="width:20%"></div>
+      </div>
+      <div class="bg-green-50 p-5 rounded-2xl mb-5 border border-green-100">
+        <h2 id="question-text" class="text-lg sm:text-xl font-bold text-gray-800 leading-snug">Memuat soal...</h2>
+      </div>
+      <div id="options-container" class="space-y-3"></div>
+      <p id="answer-feedback" class="hidden mt-4 p-3 rounded-xl text-sm font-bold" aria-live="polite"></p>
+      <button id="quit-quiz-button" type="button" onclick="showHome()" class="mt-5 text-sm text-gray-500 underline">Keluar ke menu utama</button>
+    </section>
 
-        <!-- Layar Loading -->
-        <div id="loading-screen" class="hidden text-center py-12">
-            <div class="text-7xl mb-4 animate-bounce">🚀</div>
-            <h2 class="text-2xl font-bold text-green-600 mb-2">Tunggu Sebentar...</h2>
-            <p class="text-gray-500 text-sm">Robot AI sedang meracik 5 soal baru yang unik dari internet!</p>
-        </div>
+    <section id="result-screen" class="hidden text-center py-6">
+      <div class="text-6xl mb-4 bounce" id="result-icon">🏆</div>
+      <h2 class="text-3xl font-black text-gray-800 mb-1" id="result-title">Luar Biasa!</h2>
+      <p class="text-gray-600 mb-4 text-sm">Nilai kamu untuk sesi ini:</p>
+      <div id="final-score" class="text-7xl font-black text-green-600 mb-2">100</div>
+      <p id="score-message" class="text-gray-600 mb-6"></p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button type="button" onclick="retryCurrentSubject()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 px-5 rounded-2xl shadow">Main Lagi (Soal Baru) 🔄</button>
+        <button type="button" onclick="showHome()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-5 rounded-2xl shadow">Pilih Pelajaran Lain 📚</button>
+      </div>
+    </section>
+    <footer class="border-t border-gray-100 mt-6 pt-4 text-center text-xs text-gray-400">Belajar Ceria • Kelas 4 SD</footer>
+  </main>
 
-        <!-- Layar Kuis -->
-        <div id="quiz-screen" class="hidden">
-            <div class="flex justify-between items-center mb-4">
-                <span id="subject-title" class="font-extrabold text-green-700 bg-green-100 px-4 py-1.5 rounded-full text-sm">Matematika</span>
-                <span class="font-extrabold text-blue-600 text-sm">Soal <span id="current-q-num">1</span>/5</span>
-            </div>
-            
-            <div class="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
-                <div id="progress-bar" class="bg-green-500 h-full rounded-full transition-all duration-300" style="width: 20%"></div>
-            </div>
+<script>
+'use strict';
 
-            <div class="bg-green-50/50 p-5 rounded-2xl mb-6 border border-green-100">
-                <h2 id="question-text" class="text-lg sm:text-xl font-bold text-gray-800 leading-snug">Memuat soal...</h2>
-            </div>
-            
-            <div id="options-container" class="space-y-3"></div>
-        </div>
+const subjectsData = [
+  {name:'Pendidikan Agama Islam', icon:'🕌'},
+  {name:'Pendidikan Pancasila', icon:'🦅'},
+  {name:'Bahasa Indonesia', icon:'🇮🇩'},
+  {name:'Matematika', icon:'📐'},
+  {name:'IPAS', icon:'🔬'},
+  {name:'Bahasa Jawa', icon:'🗣️'},
+  {name:'Bahasa Inggris', icon:'🔤'},
+  {name:'PJOK', icon:'⚽'},
+  {name:'Kokurikuler', icon:'🎨'},
+  {name:'Seni Rupa', icon:'🖌️'}
+];
 
-        <!-- Layar Hasil -->
-        <div id="result-screen" class="hidden text-center py-6">
-            <div class="text-7xl mb-4 bounce" id="result-icon">🏆</div>
-            <h2 class="text-3xl font-extrabold text-gray-800 mb-1" id="result-title">Luar Biasa!</h2>
-            <p class="text-gray-500 mb-4 text-sm">Nilai kamu untuk sesi ini:</p>
-            <div id="final-score" class="text-7xl font-black text-green-500 mb-6">100</div>
-            
-            <div class="flex flex-col sm:flex-row gap-3">
-                <button onclick="retryCurrentSubject()" class="flex-1 bg-green-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md">Main Lagi (Soal Baru) 🔄</button>
-                <button onclick="showHome()" class="flex-1 bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md">Pilih Pelajaran Lain 📚</button>
-            </div>
-        </div>
+let currentQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let currentSubject = '';
+let apiKey = '';
+let requestController = null;
+let loadingToken = 0;
+try { apiKey = localStorage.getItem('gemini_api_key') || ''; } catch (e) {}
 
-    </div>
+function $(id) { return document.getElementById(id); }
 
-    <script>
-        const subjectsData = [
-            { name: "Pendidikan Agama Islam", icon: "🕌" },
-            { name: "Pendidikan Pancasila", icon: "🦅" },
-            { name: "Bahasa Indonesia", icon: "🇮🇩" },
-            { name: "Matematika", icon: "📐" },
-            { name: "IPAS", icon: "🔬" },
-            { name: "Bahasa Jawa", icon: "🗣️" },
-            { name: "Bahasa Inggris", icon: "🔤" },
-            { name: "Penjaskesrek", icon: "⚽" },
-            { name: "Kokurikuler", icon: "🎨" },
-            { name: "Seni Rupa", icon: "🖌️" }
-        ];
+function renderSubjectButtons() {
+  const container = $('subject-buttons');
+  container.innerHTML = '';
+  subjectsData.forEach(subject => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bg-green-50 hover:bg-green-100 active:scale-95 text-green-950 font-bold py-4 px-2 rounded-2xl border-2 border-green-200 transition flex flex-col items-center justify-center gap-2 min-h-24';
+    const icon = document.createElement('span');
+    icon.className = 'text-3xl';
+    icon.textContent = subject.icon;
+    const label = document.createElement('span');
+    label.className = 'text-xs sm:text-sm text-center';
+    label.textContent = subject.name;
+    button.append(icon, label);
+    button.addEventListener('click', () => startSubject(subject.name));
+    container.appendChild(button);
+  });
+}
 
-        let currentQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let currentSubject = "";
-        let apiKey = "";
-
-        try { apiKey = localStorage.getItem('gemini_api_key') || ""; } catch(e) {}
-
-        function renderSubjectButtons() {
-            const container = document.getElementById('subject-buttons');
-            if(!container) return;
-            container.innerHTML = '';
-            subjectsData.forEach(sub => {
-                const btn = document.createElement('button');
-                btn.className = "bg-green-50 hover:bg-green-100 text-green-900 font-bold py-3 px-3 rounded-2xl border-2 border-green-200 transition flex flex-col items-center justify-center gap-1 hover:scale-105";
-                btn.innerHTML = `<span class="text-2xl">${sub.icon}</span><span class="text-xs sm:text-sm text-center">${sub.name}</span>`;
-                btn.onclick = () => startSubject(sub.name);
-                container.appendChild(btn);
-            });
-        }
-
-        function updateApiBadge() {
-            const badge = document.getElementById('api-status-badge');
-            if(!badge) return;
-            if(apiKey) {
-                badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-300";
-                badge.innerText = "● Gemini AI Online";
-            } else {
-                badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300";
-                badge.innerText = "● API Key Belum Diisi";
-            }
-        }
-
-        function showScreen(id) {
-            ['home-screen', 'loading-screen', 'quiz-screen', 'result-screen'].forEach(s => {
-                const el = document.getElementById(s);
-                if(el) el.classList.add('hidden');
-            });
-            const target = document.getElementById(id);
-            if(target) target.classList.remove('hidden');
-        }
-
-        function showApiSetup() {
-            document.getElementById('api-setup-screen').classList.remove('hidden');
-            document.getElementById('api-key-input').value = apiKey;
-        }
-
-        function hideApiSetup() { document.getElementById('api-setup-screen').classList.add('hidden'); }
-
-        function saveApiKey() {
-            const inputVal = document.getElementById('api-key-input').value.trim();
-            apiKey = inputVal;
-            try { localStorage.setItem('gemini_api_key', inputVal); } catch(e) {}
-            updateApiBadge();
-            hideApiSetup();
-            alert(inputVal ? "API Key disimpan!" : "API Key dikosongkan.");
-        }
-
-        async function fetchWithRetry(url, options, retries = 2) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const res = await fetch(url, options);
-                    if (res.ok) return res;
-                    if (res.status === 429 || res.status >= 500) {
-                        await new Promise(r => setTimeout(r, 2000));
-                        continue;
-                    }
-                    return res;
-                } catch (e) {
-                    if (i === retries - 1) throw e;
-                    await new Promise(r => setTimeout(r, 2000));
-                }
-            }
-            return fetch(url, options);
-        }
-
-        async function startSubject(subject) {
-            currentSubject = subject;
-            document.getElementById('subject-title').innerText = subject;
-            
-            if (!apiKey) {
-                alert("Harap masukkan Gemini API Key terlebih dahulu melalui menu ⚙️ Pengaturan API Key!");
-                showApiSetup();
-                return;
-            }
-
-            showScreen('loading-screen');
-            
-            const seed = Date.now() + "_" + Math.floor(Math.random() * 1000);
-            const prompt = `Buatkan 5 soal pilihan ganda BARU, UNIK, dan BERVARIASI tentang mata pelajaran '${subject}' untuk anak kelas 4 SD.
-ID Unik Sesi: ${seed}.
-SANGAT PENTING:
-1. Soal harus sesuai tingkat kesulitan Kelas 4 SD.
-2. Kembalikan HANYA format JSON murni tanpa markdown, tanpa teks pembuka/penutup.
-3. Format JSON berupa Array berisi 5 Object:
-[
-  {
-    "pertanyaan": "Teks pertanyaan?",
-    "pilihan": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-    "jawaban_benar": "Teks pilihan yang benar (harus sama persis dengan salah satu di array pilihan)"
+function updateApiBadge() {
+  const badge = $('api-status-badge');
+  if (apiKey) {
+    badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-green-800 border border-green-300';
+    badge.textContent = '● API Key Tersimpan';
+  } else {
+    badge.className = 'text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300';
+    badge.textContent = '● API Key Belum Diisi';
   }
-]`;
+}
 
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
-                const response = await fetchWithRetry(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { 
-                            response_mime_type: "application/json",
-                            temperature: 0.9
-                        }
-                    })
-                });
+function showScreen(id) {
+  ['home-screen','loading-screen','quiz-screen','result-screen'].forEach(screenId => $(screenId).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 
-                const data = await response.json();
+function showApiSetup() {
+  $('api-setup-screen').classList.remove('hidden');
+  $('api-key-input').value = apiKey;
+  $('api-key-input').focus();
+}
+function hideApiSetup() { $('api-setup-screen').classList.add('hidden'); }
 
-                if (!response.ok) {
-                    throw new Error(data.error?.message || `HTTP ${response.status}`);
-                }
+function saveApiKey() {
+  const value = $('api-key-input').value.trim();
+  if (value && !value.startsWith('AIza')) {
+    if (!confirm('Kunci ini tidak tampak seperti Gemini API Key standar. Tetap simpan?')) return;
+  }
+  apiKey = value;
+  try {
+    if (value) localStorage.setItem('gemini_api_key', value);
+    else localStorage.removeItem('gemini_api_key');
+  } catch (e) {
+    alert('Browser tidak mengizinkan penyimpanan lokal. Kunci hanya tersimpan selama halaman ini terbuka.');
+  }
+  updateApiBadge();
+  hideApiSetup();
+  alert(value ? 'API Key disimpan di browser ini.' : 'API Key dihapus.');
+}
 
-                let jsonText = data.candidates[0].content.parts[0].text;
-                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+function cancelLoading() {
+  loadingToken++;
+  if (requestController) requestController.abort();
+  requestController = null;
+  showHome();
+}
 
-                const parsed = JSON.parse(jsonText);
-                if (Array.isArray(parsed) && parsed.length >= 5) {
-                    currentQuestions = parsed.slice(0, 5);
-                    currentQuestionIndex = 0;
-                    score = 0;
-                    showQuestion();
-                } else {
-                    throw new Error("Format respon AI tidak valid.");
-                }
-            } catch (err) {
-                alert(`Gagal mengambil soal baru dari AI!\n\nAlasan: ${err.message}\n\nSilakan coba klik mata pelajaran lagi setelah beberapa detik.`);
-                showHome();
-            }
-        }
+function showHome() {
+  if (requestController) requestController.abort();
+  requestController = null;
+  $('api-setup-screen').classList.add('hidden');
+  showScreen('home-screen');
+}
 
-        function retryCurrentSubject() { startSubject(currentSubject); }
+function extractJson(text) {
+  let clean = String(text || '').trim();
+  clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const start = clean.indexOf('[');
+  const end = clean.lastIndexOf(']');
+  if (start >= 0 && end > start) clean = clean.slice(start, end + 1);
+  return JSON.parse(clean);
+}
 
-        function showQuestion() {
-            showScreen('quiz-screen');
-            const q = currentQuestions[currentQuestionIndex];
-            document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
-            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / 5) * 100}%`;
-            document.getElementById('question-text').innerText = q.pertanyaan;
+function validateQuestions(value) {
+  if (!Array.isArray(value) || value.length < 5) {
+    throw new Error('AI tidak mengirimkan 5 soal dengan format yang benar. Silakan coba lagi.');
+  }
+  const questions = value.slice(0, 5).map((item, index) => {
+    if (!item || typeof item.pertanyaan !== 'string' || !Array.isArray(item.pilihan) || item.pilihan.length < 4 || typeof item.jawaban_benar !== 'string') {
+      throw new Error('Format soal nomor ' + (index + 1) + ' tidak lengkap.');
+    }
+    const choices = item.pilihan.slice(0, 4).map(choice => String(choice).trim());
+    const answer = item.jawaban_benar.trim();
+    if (!choices.includes(answer)) throw new Error('Jawaban benar soal nomor ' + (index + 1) + ' tidak cocok dengan pilihan.');
+    return {pertanyaan:item.pertanyaan.trim(), pilihan:choices, jawaban_benar:answer};
+  });
+  return questions;
+}
 
-            const optsContainer = document.getElementById('options-container');
-            optsContainer.innerHTML = '';
-            
-            const shuffledOpts = [...q.pilihan].sort(() => Math.random() - 0.5);
-            shuffledOpts.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left bg-white border-2 border-gray-200 hover:border-green-400 font-semibold p-4 rounded-xl transition text-gray-700 hover:bg-green-50/50";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(opt, q.jawaban_benar, btn);
-                optsContainer.appendChild(btn);
-            });
-        }
+async function askGemini(model, prompt, signal) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(endpoint, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    signal,
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseMimeType:'application/json', temperature:0.8}
+    })
+  });
+  let data;
+  try { data = await response.json(); }
+  catch (_) { throw new Error('Balasan dari layanan AI tidak dapat dibaca.'); }
+  if (!response.ok) {
+    const message = data && data.error && data.error.message ? data.error.message : `HTTP ${response.status}`;
+    throw new Error(message);
+  }
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('');
+  if (!text) {
+    const reason = data?.promptFeedback?.blockReason;
+    throw new Error(reason ? `Permintaan diblokir: ${reason}` : 'AI tidak mengirimkan teks soal. Coba lagi.');
+  }
+  return validateQuestions(extractJson(text));
+}
 
-        function checkAnswer(selected, correct, btn) {
-            const buttons = document.getElementById('options-container').querySelectorAll('button');
-            buttons.forEach(b => b.disabled = true);
+async function startSubject(subject) {
+  currentSubject = subject;
+  if (!apiKey) {
+    alert('Masukkan Gemini API Key terlebih dahulu melalui menu Pengaturan API Key.');
+    showApiSetup();
+    return;
+  }
 
-            if (selected === correct) {
-                btn.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800 bounce";
-                score += 20;
-            } else {
-                btn.className = "w-full text-left bg-red-100 border-2 border-red-500 font-bold p-4 rounded-xl text-red-800";
-                buttons.forEach(b => {
-                    if (b.innerText === correct) {
-                        b.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800";
-                    }
-                });
-            }
+  if (requestController) requestController.abort();
+  requestController = new AbortController();
+  const thisToken = ++loadingToken;
+  showScreen('loading-screen');
 
-            setTimeout(() => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < 5) showQuestion();
-                else showResult();
-            }, 1400);
-        }
+  const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const prompt = `Buat tepat 5 soal pilihan ganda yang bervariasi dan sesuai materi umum kelas 4 SD Indonesia untuk mata pelajaran "${subject}". Sesi unik: ${sessionId}.
+Ketentuan:
+- Gunakan bahasa Indonesia sederhana dan ramah anak kelas 4 SD; untuk soal Bahasa Inggris/Bahasa Jawa gunakan materi sesuai mata pelajarannya.
+- Tiap soal memiliki 4 pilihan jawaban berbeda.
+- Pastikan hanya ada satu jawaban benar dan jawaban benar sama persis dengan salah satu pilihan.
+- Jangan mengulang pertanyaan yang sama dalam satu set.
+- Kembalikan JSON murni berupa array, tanpa markdown atau penjelasan tambahan, dengan format:
+[{"pertanyaan":"Teks pertanyaan?","pilihan":["A","B","C","D"],"jawaban_benar":"A"}]`;
 
-        function showResult() {
-            showScreen('result-screen');
-            document.getElementById('final-score').innerText = score;
-            const icon = document.getElementById('result-icon');
-            const title = document.getElementById('result-title');
-            if(score >= 80) { icon.innerText = "🏆"; title.innerText = "Hebat Sekali! 🎉"; }
-            else if(score >= 60) { icon.innerText = "🌟"; title.innerText = "Bagus Sekali!"; }
-            else { icon.innerText = "💪"; title.innerText = "Ayo Belajar Lagi!"; }
-        }
+  let lastError = 'Tidak diketahui';
+  // Model stabil terbaru, dengan model stabil generasi sebelumnya sebagai cadangan.
+  const models = ['gemini-3.8-flash', 'gemini-3.6-flash'];
+  for (const model of models) {
+    if (thisToken !== loadingToken) return;
+    try {
+      const questions = await askGemini(model, prompt, requestController.signal);
+      if (thisToken !== loadingToken) return;
+      currentQuestions = questions;
+      currentQuestionIndex = 0;
+      score = 0;
+      requestController = null;
+      showQuestion();
+      return;
+    } catch (error) {
+      if (error.name === 'AbortError' || thisToken !== loadingToken) return;
+      lastError = error.message || String(error);
+      // Don't retry another model when the key, quota, or request is invalid.
+      if (/API key not valid|invalid api key|permission|quota|billing|403|401|key expired/i.test(lastError)) break;
+    }
+  }
 
-        function showHome() { showScreen('home-screen'); }
+  requestController = null;
+  showHome();
+  alert('Gagal mengambil soal dari AI.\n\nDetail: ' + lastError + '\n\nPeriksa API Key, kuota penggunaan, dan koneksi internet. Jika muncul pesan bahwa model tidak tersedia, periksa daftar model resmi Gemini API.');
+}
 
-        renderSubjectButtons();
-        updateApiBadge();
-    </script>
+function showQuestion() {
+  showScreen('quiz-screen');
+  const question = currentQuestions[currentQuestionIndex];
+  $('subject-title').textContent = currentSubject;
+  $('current-q-num').textContent = String(currentQuestionIndex + 1);
+  $('progress-bar').style.width = `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%`;
+  $('question-text').textContent = question.pertanyaan;
+  $('answer-feedback').classList.add('hidden');
+  const container = $('options-container');
+  container.innerHTML = '';
+  const shuffled = [...question.pilihan].sort(() => Math.random() - 0.5);
+  shuffled.forEach(choice => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'option-btn w-full text-left bg-white border-2 border-gray-200 hover:border-green-400 font-semibold p-4 rounded-xl text-gray-800 hover:bg-green-50';
+    button.textContent = choice;
+    button.addEventListener('click', () => checkAnswer(choice, question.jawaban_benar, button));
+    container.appendChild(button);
+  });
+}
+
+function checkAnswer(selected, correct, clickedButton) {
+  const buttons = $('options-container').querySelectorAll('button');
+  buttons.forEach(button => { button.disabled = true; button.classList.add('opacity-80'); });
+  const feedback = $('answer-feedback');
+  feedback.classList.remove('hidden');
+  if (selected === correct) {
+    clickedButton.className = 'option-btn w-full text-left bg-green-100 border-2 border-green-600 font-bold p-4 rounded-xl text-green-900 bounce';
+    feedback.className = 'mt-4 p-3 rounded-xl text-sm font-bold bg-green-100 text-green-900';
+    feedback.textContent = 'Benar sekali! 🎉';
+    score += 20;
+  } else {
+    clickedButton.className = 'option-btn w-full text-left bg-red-100 border-2 border-red-500 font-bold p-4 rounded-xl text-red-900';
+    buttons.forEach(button => {
+      if (button.textContent === correct) button.className = 'option-btn w-full text-left bg-green-100 border-2 border-green-600 font-bold p-4 rounded-xl text-green-900';
+    });
+    feedback.className = 'mt-4 p-3 rounded-xl text-sm font-bold bg-red-50 text-red-900';
+    feedback.textContent = 'Belum tepat. Jawaban yang benar: ' + correct;
+  }
+  const answeredIndex = currentQuestionIndex;
+  window.setTimeout(() => {
+    if (answeredIndex !== currentQuestionIndex || !$('quiz-screen') || $('quiz-screen').classList.contains('hidden')) return;
+    currentQuestionIndex++;
+    if (currentQuestionIndex < currentQuestions.length) showQuestion();
+    else showResult();
+  }, 1400);
+}
+
+function showResult() {
+  showScreen('result-screen');
+  $('final-score').textContent = String(score);
+  $('score-message').textContent = `Kamu menjawab benar ${score / 20} dari ${currentQuestions.length} soal.`;
+  if (score >= 80) {
+    $('result-icon').textContent = '🏆';
+    $('result-title').textContent = 'Hebat Sekali! 🎉';
+  } else if (score >= 60) {
+    $('result-icon').textContent = '🌟';
+    $('result-title').textContent = 'Bagus Sekali!';
+  } else {
+    $('result-icon').textContent = '💪';
+    $('result-title').textContent = 'Ayo Belajar Lagi!';
+  }
+}
+
+function retryCurrentSubject() { startSubject(currentSubject); }
+
+renderSubjectButtons();
+updateApiBadge();
+</script>
 </body>
 </html>
