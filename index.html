@@ -33,7 +33,7 @@
             </div>
             <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal baru otomatis dari internet.</p>
             <div class="flex gap-2 mb-2">
-                <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini (AIStudio...)" class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-500 text-sm">
+                <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-500 text-sm">
                 <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
             </div>
             <p class="text-xs text-gray-400">Belum punya kunci? Buat gratis di <a href="https://aistudio.google.com/" target="_blank" class="text-blue-500 underline">Google AI Studio</a>.</p>
@@ -243,7 +243,6 @@
             document.getElementById('subject-title').innerText = subject;
             
             if (!apiKey) {
-                // Tanpa API key -> Gunakan soal offline
                 useFallbackQuestions(subject);
                 return;
             }
@@ -261,10 +260,10 @@ Format JSON berupa Array dari 5 Object seperti ini:
   }
 ]`;
 
-            // Daftar model fallback
-            const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+            // Gunakan model gemini-2.5-flash sebagai standar utama
+            const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash'];
             let success = false;
-            let lastError = "";
+            let errors = [];
 
             for (let model of modelsToTry) {
                 try {
@@ -281,15 +280,13 @@ Format JSON berupa Array dari 5 Object seperti ini:
                         })
                     });
 
+                    const data = await response.json();
+
                     if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.error?.message || `HTTP status ${response.status}`);
+                        throw new Error(data.error?.message || `HTTP status ${response.status}`);
                     }
 
-                    const data = await response.json();
                     let jsonText = data.candidates[0].content.parts[0].text;
-
-                    // Bersihkan tanda markdown jika ada
                     jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
                     const parsed = JSON.parse(jsonText);
@@ -299,8 +296,7 @@ Format JSON berupa Array dari 5 Object seperti ini:
                         break;
                     }
                 } catch (err) {
-                    console.warn(`Model ${model} gagal:`, err);
-                    lastError = err.message;
+                    errors.push(`${model}: ${err.message}`);
                 }
             }
 
@@ -309,15 +305,13 @@ Format JSON berupa Array dari 5 Object seperti ini:
                 score = 0;
                 showQuestion();
             } else {
-                console.error("Semua model API gagal. Alasan:", lastError);
-                alert(`Catatan AI: ${lastError}\n\nAplikasi otomatis mengalihkan ke mode Soal Cadangan agar tetap bisa dimainkan!`);
+                alert(`Gagal mengambil soal dari AI.\n\nDetail Error: ${errors[0]}\n\nCatatan: Pastikan API Key diambil dari https://aistudio.google.com/\n\nAplikasi dialihkan ke Mode Offline.`);
                 useFallbackQuestions(subject);
             }
         }
 
         function useFallbackQuestions(subject) {
             let list = fallbackDatabase[subject] || fallbackDatabase["Matematika"];
-            // Acak urutan soal
             currentQuestions = [...list].sort(() => Math.random() - 0.5).slice(0, 5);
             currentQuestionIndex = 0;
             score = 0;
@@ -338,7 +332,6 @@ Format JSON berupa Array dari 5 Object seperti ini:
             const optsContainer = document.getElementById('options-container');
             optsContainer.innerHTML = '';
             
-            // Acak urutan pilihan jawaban
             const shuffledOpts = [...q.pilihan].sort(() => Math.random() - 0.5);
 
             shuffledOpts.forEach(opt => {
@@ -352,56 +345,4 @@ Format JSON berupa Array dari 5 Object seperti ini:
 
         function checkAnswer(selected, correct, btn) {
             const buttons = document.getElementById('options-container').querySelectorAll('button');
-            buttons.forEach(b => b.disabled = true);
-
-            if (selected === correct) {
-                btn.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800 bounce";
-                score += 20;
-            } else {
-                btn.className = "w-full text-left bg-red-100 border-2 border-red-500 font-bold p-4 rounded-xl text-red-800";
-                // Tunjukkan jawaban yang benar
-                buttons.forEach(b => {
-                    if (b.innerText === correct) {
-                        b.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800";
-                    }
-                });
-            }
-
-            setTimeout(() => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < 5) {
-                    showQuestion();
-                } else {
-                    showResult();
-                }
-            }, 1400);
-        }
-
-        function showResult() {
-            showScreen('result-screen');
-            document.getElementById('final-score').innerText = score;
-
-            const icon = document.getElementById('result-icon');
-            const title = document.getElementById('result-title');
-
-            if(score >= 80) {
-                icon.innerText = "🏆";
-                title.innerText = "Hebat Sekali! 🎉";
-                if(typeof confetti === 'function') {
-                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-                }
-            } else if(score >= 60) {
-                icon.innerText = "🌟";
-                title.innerText = "Bagus Sekali!";
-            } else {
-                icon.innerText = "💪";
-                title.innerText = "Ayo Belajar Lagi!";
-            }
-        }
-
-        function showHome() {
-            showScreen('home-screen');
-        }
-    </script>
-</body>
-</html>
+            buttons.forEach(
