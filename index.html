@@ -167,7 +167,6 @@
 
             showScreen('loading-screen');
             
-            // Seed waktu unik agar AI dipaksa meracik soal baru setiap kali diklik
             const seed = Date.now() + "_" + Math.floor(Math.random() * 1000);
             const prompt = `Buatkan 5 soal pilihan ganda BARU, UNIK, dan BERVARIASI tentang mata pelajaran '${subject}' untuk anak kelas 4 SD.
 ID Unik Sesi: ${seed}.
@@ -183,40 +182,50 @@ SANGAT PENTING:
   }
 ]`;
 
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { 
-                            response_mime_type: "application/json",
-                            temperature: 0.9
-                        }
-                    })
-                });
+            const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+            let success = false;
+            let lastError = "";
 
-                const data = await response.json();
+            for (let model of candidateModels) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { 
+                                response_mime_type: "application/json",
+                                temperature: 0.9
+                            }
+                        })
+                    });
 
-                if (!response.ok) {
-                    throw new Error(data.error?.message || `HTTP ${response.status}`);
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error?.message || `HTTP ${response.status}`);
+                    }
+
+                    let jsonText = data.candidates[0].content.parts[0].text;
+                    jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                    const parsed = JSON.parse(jsonText);
+                    if (Array.isArray(parsed) && parsed.length >= 5) {
+                        currentQuestions = parsed.slice(0, 5);
+                        currentQuestionIndex = 0;
+                        score = 0;
+                        showQuestion();
+                        success = true;
+                        break;
+                    }
+                } catch (err) {
+                    lastError = err.message;
                 }
+            }
 
-                let jsonText = data.candidates[0].content.parts[0].text;
-                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-                const parsed = JSON.parse(jsonText);
-                if (Array.isArray(parsed) && parsed.length >= 5) {
-                    currentQuestions = parsed.slice(0, 5);
-                    currentQuestionIndex = 0;
-                    score = 0;
-                    showQuestion();
-                } else {
-                    throw new Error("Format respon AI tidak valid.");
-                }
-            } catch (err) {
-                alert(`Gagal mengambil soal baru dari AI!\n\nAlasan: ${err.message}\n\nPastikan API Key sudah benar dan koneksi internet lancar.`);
+            if (!success) {
+                alert(`Gagal mengambil soal baru dari AI!\n\nAlasan: ${lastError}\n\nPastikan API Key sudah benar dan koneksi internet lancar.`);
                 showHome();
             }
         }
