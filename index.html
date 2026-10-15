@@ -7,16 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #f0fdf4; 
-            font-family: 'Nunito', sans-serif; 
-        }
+        body { background-color: #f0fdf4; font-family: 'Nunito', sans-serif; }
         .hidden { display: none !important; }
         .bounce { animation: bounce 0.5s; }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center">
@@ -32,10 +26,9 @@
             </div>
             <p class="text-sm text-gray-500 mb-4">Masukkan API Key dari Google AI Studio untuk membuat soal otomatis dari AI. (Bisa dikosongkan untuk main mode offline/gratisan).</p>
             <div class="flex gap-2 mb-2">
-                <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none focus:border-green-500 text-sm">
+                <input type="password" id="api-key-input" placeholder="Tempel Gemini API Key di sini..." class="flex-1 p-3 border-2 border-green-300 rounded-xl focus:outline-none text-sm">
                 <button onclick="saveApiKey()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-xl transition text-sm">Simpan</button>
             </div>
-            <p class="text-xs text-gray-400">Belum punya kunci? Buat gratis di <a href="https://aistudio.google.com/" target="_blank" class="text-blue-500 underline">Google AI Studio</a>.</p>
         </div>
 
         <!-- Layar Menu Utama -->
@@ -48,9 +41,7 @@
             <h1 class="text-4xl font-extrabold text-green-600 mb-2">Belajar Ceria! 🌟</h1>
             <p class="text-gray-500 mb-6 font-medium">Pilih mata pelajaran kuis Kelas 4 SD di bawah ini:</p>
             
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="subject-buttons">
-                <!-- Tombol Mapel Dihasilkan via JS -->
-            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="subject-buttons"></div>
         </div>
 
         <!-- Layar Loading -->
@@ -75,9 +66,7 @@
                 <h2 id="question-text" class="text-lg sm:text-xl font-bold text-gray-800 leading-snug">Memuat soal...</h2>
             </div>
             
-            <div id="options-container" class="space-y-3">
-                <!-- Pilihan Jawaban -->
-            </div>
+            <div id="options-container" class="space-y-3"></div>
         </div>
 
         <!-- Layar Hasil -->
@@ -88,8 +77,8 @@
             <div id="final-score" class="text-7xl font-black text-green-500 mb-6">100</div>
             
             <div class="flex flex-col sm:flex-row gap-3">
-                <button onclick="retryCurrentSubject()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 px-6 rounded-2xl transition shadow-md">Main Lagi 🔄</button>
-                <button onclick="showHome()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3.5 px-6 rounded-2xl transition shadow-md">Pilih Pelajaran Lain 📚</button>
+                <button onclick="retryCurrentSubject()" class="flex-1 bg-green-500 text-white font-bold py-3.5 px-6 rounded-2xl">Main Lagi 🔄</button>
+                <button onclick="showHome()" class="flex-1 bg-blue-500 text-white font-bold py-3.5 px-6 rounded-2xl">Pilih Pelajaran Lain 📚</button>
             </div>
         </div>
 
@@ -102,73 +91,269 @@
             { name: "Bahasa Indonesia", icon: "🇮🇩" },
             { name: "Matematika", icon: "📐" },
             { name: "IPAS", icon: "🔬" },
-            { name: "Bahasa Jawa", icon: "ꦗ" },
+            { name: "Bahasa Jawa", icon: "🗣️" },
             { name: "Bahasa Inggris", icon: "🔤" },
             { name: "Penjaskesrek", icon: "⚽" },
             { name: "Kokurikuler", icon: "🎨" },
             { name: "Seni Rupa", icon: "🖌️" }
         ];
 
-        // Bank Soal Cadangan (Offline Mode)
         const fallbackDatabase = {
             "Pendidikan Agama Islam": [
-                { pertanyaan: "Kitab suci yang diturunkan kepada Nabi Muhammad SAW adalah...", pilihan: ["Taurat", "Zabur", "Injil", "Al-Qur'an"], jawaban_benar: "Al-Qur'an" },
-                { pertanyaan: "Shalat fardhu yang jumlah rakaatnya 3 adalah...", pilihan: ["Subuh", "Maghrib", "Isya", "Dzuhur"], jawaban_benar: "Maghrib" },
-                { pertanyaan: "Malaikat yang bertugas menyampaikan wahyu adalah...", pilihan: ["Mikail", "Jibril", "Israfil", "Izrail"], jawaban_benar: "Jibril" },
-                { pertanyaan: "Rukun Islam yang ke-1 adalah...", pilihan: ["Membayar Zakat", "Shalat", "Mengucapkan Dua Kalimat Syahadat", "Puasa"], jawaban_benar: "Mengucapkan Dua Kalimat Syahadat" },
-                { pertanyaan: "Sifat 'Siddiq' pada Rasul memiliki arti...", pilihan: ["Jujur/Benar", "Dapat Dipercaya", "Cerdas", "Menyampaikan"], jawaban_benar: "Jujur/Benar" }
+                { pertanyaan: "Kitab suci Nabi Muhammad SAW adalah...", pilihan: ["Taurat", "Zabur", "Injil", "Al-Qur'an"], jawaban_benar: "Al-Qur'an" },
+                { pertanyaan: "Shalat fardhu 3 rakaat adalah...", pilihan: ["Subuh", "Maghrib", "Isya", "Dzuhur"], jawaban_benar: "Maghrib" },
+                { pertanyaan: "Malaikat penyampai wahyu adalah...", pilihan: ["Mikail", "Jibril", "Israfil", "Izrail"], jawaban_benar: "Jibril" },
+                { pertanyaan: "Rukun Islam ke-1 adalah...", pilihan: ["Zakat", "Shalat", "Syahadat", "Puasa"], jawaban_benar: "Syahadat" },
+                { pertanyaan: "Sifat 'Siddiq' artinya...", pilihan: ["Jujur", "Terpercaya", "Cerdas", "Menyampaikan"], jawaban_benar: "Jujur" }
             ],
             "Pendidikan Pancasila": [
-                { pertanyaan: "Sila pertama Pancasila dilambangkan dengan gambar...", pilihan: ["Rantai", "Pohon Beringin", "Bintang", "Kepala Banteng"], jawaban_benar: "Bintang" },
+                { pertanyaan: "Sila 1 Pancasila dilambangkan...", pilihan: ["Rantai", "Pohon Beringin", "Bintang", "Kepala Banteng"], jawaban_benar: "Bintang" },
                 { pertanyaan: "Semboyan negara Indonesia adalah...", pilihan: ["Tut Wuri Handayani", "Bhinneka Tunggal Ika", "Bersatu Kita Teguh", "Pancasila Sakti"], jawaban_benar: "Bhinneka Tunggal Ika" },
-                { pertanyaan: "Keadilan sosial bagi seluruh rakyat Indonesia merupakan bunyi sila ke-...", pilihan: ["2", "3", "4", "5"], jawaban_benar: "5" },
-                { pertanyaan: "Warna merah pada bendera Indonesia melambangkan...", pilihan: ["Kesucian", "Keberanian", "Kemakmuran", "Perdamaian"], jawaban_benar: "Keberanian" },
-                { pertanyaan: "Sikap saling menghargai perbedaan dinamakan...", pilihan: ["Toleransi", "Egois", "Mandiri", "Disiplin"], jawaban_benar: "Toleransi" }
+                { pertanyaan: "Keadilan sosial bunyi sila ke-...", pilihan: ["2", "3", "4", "5"], jawaban_benar: "5" },
+                { pertanyaan: "Warna merah bendera melambangkan...", pilihan: ["Kesucian", "Keberanian", "Kemakmuran", "Perdamaian"], jawaban_benar: "Keberanian" },
+                { pertanyaan: "Menghargai perbedaan disebut...", pilihan: ["Toleransi", "Egois", "Mandiri", "Disiplin"], jawaban_benar: "Toleransi" }
             ],
             "Bahasa Indonesia": [
-                { pertanyaan: "Kata dasar dari 'menulis' adalah...", pilihan: ["Tulis", "Nulis", "Penulis", "Tulisan"], jawaban_benar: "Tulis" },
-                { pertanyaan: "Tanda baca yang digunakan untuk mengakhiri kalimat berita adalah...", pilihan: ["Tanda Tanya (?)", "Tanda Seru (!)", "Tanda Titik (.)", "Tanda Koma (,)"], jawaban_benar: "Tanda Titik (.)" },
-                { pertanyaan: "Lawan kata (antonim) dari 'rajin' adalah...", pilihan: ["Pintar", "Malas", "Giat", "Pandai"], jawaban_benar: "Malas" },
-                { pertanyaan: "Gagasan utama dalam sebuah paragraf disebut...", pilihan: ["Kalimat penjelas", "Ide pokok", "Judul", "Kesimpulan"], jawaban_benar: "Ide pokok" },
-                { pertanyaan: "Persamaan kata (sinonim) dari 'hemat' adalah...", pilihan: ["Boros", "Irit", "Kikir", "Cermat"], jawaban_benar: "Irit" }
+                { pertanyaan: "Kata dasar 'menulis' adalah...", pilihan: ["Tulis", "Nulis", "Penulis", "Tulisan"], jawaban_benar: "Tulis" },
+                { pertanyaan: "Tanda mengakhiri kalimat berita adalah...", pilihan: ["Tanda Tanya (?)", "Tanda Seru (!)", "Tanda Titik (.)", "Tanda Koma (,)"], jawaban_benar: "Tanda Titik (.)" },
+                { pertanyaan: "Lawan kata 'rajin' adalah...", pilihan: ["Pintar", "Malas", "Giat", "Pandai"], jawaban_benar: "Malas" },
+                { pertanyaan: "Gagasan utama paragraf disebut...", pilihan: ["Kalimat penjelas", "Ide pokok", "Judul", "Kesimpulan"], jawaban_benar: "Ide pokok" },
+                { pertanyaan: "Sinonim 'hemat' adalah...", pilihan: ["Boros", "Irit", "Kikir", "Cermat"], jawaban_benar: "Irit" }
             ],
             "Matematika": [
-                { pertanyaan: "Hasil dari 25 x 4 adalah...", pilihan: ["80", "90", "100", "110"], jawaban_benar: "100" },
-                { pertanyaan: "Bangun datar yang memiliki 4 sisi sama panjang adalah...", pilihan: ["Persegi Panjang", "Persegi", "Segitiga", "Trapesium"], jawaban_benar: "Persegi" },
+                { pertanyaan: "Hasil 25 x 4 adalah...", pilihan: ["80", "90", "100", "110"], jawaban_benar: "100" },
+                { pertanyaan: "Bangun datar 4 sisi sama panjang adalah...", pilihan: ["Persegi Panjang", "Persegi", "Segitiga", "Trapesium"], jawaban_benar: "Persegi" },
                 { pertanyaan: "KPK dari 4 dan 6 adalah...", pilihan: ["12", "16", "24", "8"], jawaban_benar: "12" },
-                { pertanyaan: "Pecahan 1/2 nilainya sama dengan...", pilihan: ["2/4", "3/4", "1/4", "2/3"], jawaban_benar: "2/4" },
-                { pertanyaan: "Keliling persegi dengan panjang sisi 5 cm adalah...", pilihan: ["20 cm", "25 cm", "15 cm", "10 cm"], jawaban_benar: "20 cm" }
+                { pertanyaan: "Pecahan 1/2 sama dengan...", pilihan: ["2/4", "3/4", "1/4", "2/3"], jawaban_benar: "2/4" },
+                { pertanyaan: "Keliling persegi sisi 5 cm adalah...", pilihan: ["20 cm", "25 cm", "15 cm", "10 cm"], jawaban_benar: "20 cm" }
             ],
             "IPAS": [
-                { pertanyaan: "Tumbuhan hijau membuat makanannya sendiri melalui proses...", pilihan: ["Respirasi", "Fotosintesis", "Adaptasi", "Evolusi"], jawaban_benar: "Fotosintesis" },
-                { pertanyaan: "Benda yang dapat ditarik oleh magnet adalah...", pilihan: ["Plastik", "Kayu", "Besi", "Kaca"], jawaban_benar: "Besi" },
-                { pertanyaan: "Perubahan wujud dari cair menjadi gas disebut...", pilihan: ["Mencair", "Membeku", "Menguap", "Mengembun"], jawaban_benar: "Menguap" },
-                { pertanyaan: "Bagian tumbuhan yang berfungsi menyerap air dan hara adalah...", pilihan: ["Daun", "Batang", "Akar", "Bunga"], jawaban_benar: "Akar" },
+                { pertanyaan: "Tumbuhan membuat makanan sendiri melalui...", pilihan: ["Respirasi", "Fotosintesis", "Adaptasi", "Evolusi"], jawaban_benar: "Fotosintesis" },
+                { pertanyaan: "Benda ditarik magnet adalah...", pilihan: ["Plastik", "Kayu", "Besi", "Kaca"], jawaban_benar: "Besi" },
+                { pertanyaan: "Cair menjadi gas disebut...", pilihan: ["Mencair", "Membeku", "Menguap", "Mengembun"], jawaban_benar: "Menguap" },
+                { pertanyaan: "Bagian tumbuhan menyerap air adalah...", pilihan: ["Daun", "Batang", "Akar", "Bunga"], jawaban_benar: "Akar" },
                 { pertanyaan: "Hewan pemakan tumbuhan disebut...", pilihan: ["Karnivora", "Herbivora", "Omnivora", "Insektivora"], jawaban_benar: "Herbivora" }
             ],
             "Bahasa Jawa": [
-                { pertanyaan: "Basa krama lugu utawa alus saka 'mangan' yaiku...", pilihan: ["Turu", "Dahar", "Mbeledhos", "Tumbas"], jawaban_benar: "Dahar" },
-                { pertanyaan: "Pira cacahe aksara Jawa legena...", pilihan: ["18", "20", "22", "24"], jawaban_benar: "20" },
+                { pertanyaan: "Basa krama 'mangan' yaiku...", pilihan: ["Turu", "Dahar", "Mbeledhos", "Tumbas"], jawaban_benar: "Dahar" },
+                { pertanyaan: "Cacahe aksara Jawa legena...", pilihan: ["18", "20", "22", "24"], jawaban_benar: "20" },
                 { pertanyaan: "Bapak nedha, kula...", pilihan: ["Dahar", "Mangan", "Ndue", "Turu"], jawaban_benar: "Mangan" },
-                { pertanyaan: "Panggonan kanggo mandheg sepur yaiku...", pilihan: ["Stasiun", "Terminal", "Pelabuhan", "Bandara"], jawaban_benar: "Stasiun" },
+                { pertanyaan: "Panggonan mandheg sepur yaiku...", pilihan: ["Stasiun", "Terminal", "Pelabuhan", "Bandara"], jawaban_benar: "Stasiun" },
                 { pertanyaan: "Simbah nembe 'sare'. Sare tegese...", pilihan: ["Mangan", "Turu", "Adus", "Lunga"], jawaban_benar: "Turu" }
             ],
             "Bahasa Inggris": [
-                { pertanyaan: "What is the English word for 'Kucing'?", pilihan: ["Dog", "Cat", "Bird", "Rabbit"], jawaban_benar: "Cat" },
-                { pertanyaan: "Translating 'Saya suka membaca buku' into English is...", pilihan: ["I like reading books", "I eat books", "I buy books", "I write books"], jawaban_benar: "I like reading books" },
-                { pertanyaan: "What color is the sky on a clear day?", pilihan: ["Red", "Green", "Blue", "Yellow"], jawaban_benar: "Blue" },
-                { pertanyaan: "The day after Monday is...", pilihan: ["Sunday", "Tuesday", "Wednesday", "Friday"], jawaban_benar: "Tuesday" },
+                { pertanyaan: "English word for 'Kucing'?", pilihan: ["Dog", "Cat", "Bird", "Rabbit"], jawaban_benar: "Cat" },
+                { pertanyaan: "'Saya suka membaca buku' in English...", pilihan: ["I like reading books", "I eat books", "I buy books", "I write books"], jawaban_benar: "I like reading books" },
+                { pertanyaan: "Color of the clear sky?", pilihan: ["Red", "Green", "Blue", "Yellow"], jawaban_benar: "Blue" },
+                { pertanyaan: "Day after Monday?", pilihan: ["Sunday", "Tuesday", "Wednesday", "Friday"], jawaban_benar: "Tuesday" },
                 { pertanyaan: "We use our eyes for...", pilihan: ["Listening", "Seeing", "Smelling", "Tasting"], jawaban_benar: "Seeing" }
             ],
             "Penjaskesrek": [
-                { pertanyaan: "Jumlah pemain dalam satu tim sepak bola adalah...", pilihan: ["5 orang", "6 orang", "11 orang", "12 orang"], jawaban_benar: "11 orang" },
-                { pertanyaan: "Lari, jalan, dan lompat termasuk dalam cabang olahraga...", pilihan: ["Atletik", "Renang", "Senam", "Bela diri"], jawaban_benar: "Atletik" },
-                { pertanyaan: "Olahraga renang dilakukan di...", pilihan: ["Lapangan", "Kolam renang", "Gedung olahraga", "Stadion"], jawaban_benar: "Kolam renang" },
-                { pertanyaan: "Sebelum berolahraga sebaiknya kita melakukan...", pilihan: ["Pemanasan", "Pendinginan", "Tidur", "Makan berat"], jawaban_benar: "Pemanasan" },
-                { pertanyaan: "Mengoper bola kepada teman satu tim disebut...", pilihan: ["Shooting", "Passing", "Dribbling", "Smash"], jawaban_benar: "Passing" }
+                { pertanyaan: "Pemain satu tim sepak bola...", pilihan: ["5 orang", "6 orang", "11 orang", "12 orang"], jawaban_benar: "11 orang" },
+                { pertanyaan: "Lari, jalan, lompat cabang olahraga...", pilihan: ["Atletik", "Renang", "Senam", "Bela diri"], jawaban_benar: "Atletik" },
+                { pertanyaan: "Renang dilakukan di...", pilihan: ["Lapangan", "Kolam renang", "Gedung olahraga", "Stadion"], jawaban_benar: "Kolam renang" },
+                { pertanyaan: "Sebelum berolahraga sebaiknya...", pilihan: ["Pemanasan", "Pendinginan", "Tidur", "Makan berat"], jawaban_benar: "Pemanasan" },
+                { pertanyaan: "Mengoper bola dinamakan...", pilihan: ["Shooting", "Passing", "Dribbling", "Smash"], jawaban_benar: "Passing" }
             ],
             "Kokurikuler": [
-                { pertanyaan: "Kegiatan kerja bakti membersihkan lingkungan sekolah melatih rasa...", pilihan: ["Egois", "Gotong royong", "Sombong", "Acuh tak acuh"], jawaban_benar: "Gotong royong" },
-                { pertanyaan: "Menanam pohon di lingkungan sekolah bermanfaat untuk...", pilihan: ["Membuat tanah kering", "Penghijauan dan udara segar", "Menyempitkan halaman", "Membuang sampah"], jawaban_benar: "Penghijauan dan udara segar" },
-                { pertanyaan: "Sampah plastik dan botol bekas termasuk jenis sampah...", pilihan: ["Organik", "Anorganik", "B3", "Basah"], jawaban_benar: "Anorganik" },
-                { pertanyaan
+                { pertanyaan: "Kerja bakti melatih rasa...", pilihan: ["Egois", "Gotong royong", "Sombong", "Acuh"], jawaban_benar: "Gotong royong" },
+                { pertanyaan: "Menanam pohon bermanfaat untuk...", pilihan: ["Membuat tanah kering", "Penghijauan", "Menyempitkan halaman", "Membuang sampah"], jawaban_benar: "Penghijauan" },
+                { pertanyaan: "Botol bekas termasuk sampah...", pilihan: ["Organik", "Anorganik", "B3", "Basah"], jawaban_benar: "Anorganik" },
+                { pertanyaan: "Mendaur ulang barang bekas disebut...", pilihan: ["Recycle", "Reboisasi", "Erosional", "Eksploitasi"], jawaban_benar: "Recycle" },
+                { pertanyaan: "Sikap saat kerja kelompok...", pilihan: ["Mau menang sendiri", "Menghargai teman", "Diam saja", "Marah"], jawaban_benar: "Menghargai teman" }
+            ],
+            "Seni Rupa": [
+                { pertanyaan: "Warna primer terdiri dari...", pilihan: ["Merah, Kuning, Biru", "Hijau, Ungu, Jingga", "Hitam, Putih, Abu", "Cokelat, Merah, Kuning"], jawaban_benar: "Merah, Kuning, Biru" },
+                { pertanyaan: "Merah + kuning menghasilkan...", pilihan: ["Hijau", "Ungu", "Jingga", "Cokelat"], jawaban_benar: "Jingga" },
+                { pertanyaan: "Patung karya seni rupa...", pilihan: ["1 Dimensi", "2 Dimensi", "3 Dimensi", "4 Dimensi"], jawaban_benar: "3 Dimensi" },
+                { pertanyaan: "Alat mengoles cat air...", pilihan: ["Pensil", "Kuas", "Penggaris", "Gunting"], jawaban_benar: "Kuas" },
+                { pertanyaan: "Unsur paling dasar seni rupa...", pilihan: ["Titik", "Bidang", "Ruang", "Tekstur"], jawaban_benar: "Titik" }
+            ]
+        };
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentSubject = "";
+        let apiKey = "";
+
+        try {
+            apiKey = localStorage.getItem('gemini_api_key') || "";
+        } catch(e) {}
+
+        function renderSubjectButtons() {
+            const container = document.getElementById('subject-buttons');
+            if(!container) return;
+            container.innerHTML = '';
+            subjectsData.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = "bg-green-50 hover:bg-green-100 text-green-900 font-bold py-3 px-3 rounded-2xl border-2 border-green-200 transition flex flex-col items-center justify-center gap-1";
+                btn.innerHTML = `<span class="text-2xl">${sub.icon}</span><span class="text-xs sm:text-sm text-center">${sub.name}</span>`;
+                btn.onclick = () => startSubject(sub.name);
+                container.appendChild(btn);
+            });
+        }
+
+        function updateApiBadge() {
+            const badge = document.getElementById('api-status-badge');
+            if(!badge) return;
+            if(apiKey) {
+                badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-300";
+                badge.innerText = "● API Online Active";
+            } else {
+                badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300";
+                badge.innerText = "● Mode Offline (Default)";
+            }
+        }
+
+        function showScreen(id) {
+            ['home-screen', 'loading-screen', 'quiz-screen', 'result-screen'].forEach(s => {
+                const el = document.getElementById(s);
+                if(el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(id);
+            if(target) target.classList.remove('hidden');
+        }
+
+        function showApiSetup() {
+            document.getElementById('api-setup-screen').classList.remove('hidden');
+            document.getElementById('api-key-input').value = apiKey;
+        }
+
+        function hideApiSetup() {
+            document.getElementById('api-setup-screen').classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const inputVal = document.getElementById('api-key-input').value.trim();
+            apiKey = inputVal;
+            try { localStorage.setItem('gemini_api_key', inputVal); } catch(e) {}
+            updateApiBadge();
+            hideApiSetup();
+            alert(inputVal ? "API Key disimpan!" : "API Key dikosongkan.");
+        }
+
+        async function startSubject(subject) {
+            currentSubject = subject;
+            document.getElementById('subject-title').innerText = subject;
+            
+            if (!apiKey) {
+                useFallbackQuestions(subject);
+                return;
+            }
+
+            showScreen('loading-screen');
+            
+            const prompt = `Buatkan 5 soal pilihan ganda tentang pelajaran '${subject}' untuk anak kelas 4 SD.
+Kembalikan HANYA format JSON murni tanpa markdown:
+[
+  {
+    "pertanyaan": "Teks pertanyaan?",
+    "pilihan": ["A", "B", "C", "D"],
+    "jawaban_benar": "A"
+  }
+]`;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { response_mime_type: "application/json" }
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error?.message || `HTTP ${response.status}`);
+
+                let jsonText = data.candidates[0].content.parts[0].text;
+                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                const parsed = JSON.parse(jsonText);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    currentQuestions = parsed.slice(0, 5);
+                    currentQuestionIndex = 0;
+                    score = 0;
+                    showQuestion();
+                    return;
+                }
+            } catch (err) {
+                alert(`Catatan AI (${err.message}). Menggunakan Soal Offline.`);
+            }
+
+            useFallbackQuestions(subject);
+        }
+
+        function useFallbackQuestions(subject) {
+            let list = fallbackDatabase[subject] || fallbackDatabase["Matematika"];
+            currentQuestions = [...list].sort(() => Math.random() - 0.5).slice(0, 5);
+            currentQuestionIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function retryCurrentSubject() { startSubject(currentSubject); }
+
+        function showQuestion() {
+            showScreen('quiz-screen');
+            const q = currentQuestions[currentQuestionIndex];
+            document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / 5) * 100}%`;
+            document.getElementById('question-text').innerText = q.pertanyaan;
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            
+            const shuffledOpts = [...q.pilihan].sort(() => Math.random() - 0.5);
+            shuffledOpts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-white border-2 border-gray-200 hover:border-green-400 font-semibold p-4 rounded-xl transition text-gray-700";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, q.jawaban_benar, btn);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btn.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800 bounce";
+                score += 20;
+            } else {
+                btn.className = "w-full text-left bg-red-100 border-2 border-red-500 font-bold p-4 rounded-xl text-red-800";
+                buttons.forEach(b => {
+                    if (b.innerText === correct) {
+                        b.className = "w-full text-left bg-green-100 border-2 border-green-500 font-bold p-4 rounded-xl text-green-800";
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < 5) showQuestion();
+                else showResult();
+            }, 1400);
+        }
+
+        function showResult() {
+            showScreen('result-screen');
+            document.getElementById('final-score').innerText = score;
+            const icon = document.getElementById('result-icon');
+            const title = document.getElementById('result-title');
+            if(score >= 80) { icon.innerText = "🏆"; title.innerText = "Hebat Sekali! 🎉"; }
+            else if(score >= 60) { icon.innerText = "🌟"; title.innerText = "Bagus Sekali!"; }
+            else { icon.innerText = "💪"; title.innerText = "Ayo Belajar Lagi!"; }
+        }
+
+        function showHome() { showScreen('home-screen'); }
+
+        // Render tombol secara langsung
+        renderSubjectButtons();
+        updateApiBadge();
+    </script>
+</body>
+</html>
